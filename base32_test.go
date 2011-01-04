@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package base64
+package base32
 
 import (
 	"bytes"
@@ -23,12 +23,12 @@ var pairs = []testpair{
 
 	// RFC 4648 examples
 	{"", ""},
-	{"f", "Zg=="},
-	{"fo", "Zm8="},
-	{"foo", "Zm9v"},
-	{"foob", "Zm9vYg=="},
-	{"fooba", "Zm9vYmE="},
-	{"foobar", "Zm9vYmFy"},
+	{"f", "MY======"},
+	{"fo", "MZXQ===="},
+	{"foo", "MZXW6==="},
+	{"foob", "MZXW6YQ="},
+	{"fooba", "MZXW6YTB"},
+	{"foobar", "MZXW6YTBOI======"},
 
 	// Wikipedia examples
 	{"sure.", "c3VyZS4="},

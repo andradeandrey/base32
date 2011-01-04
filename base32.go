@@ -78,23 +78,23 @@ func (enc *Encoding) Encode(dst, src []byte) {
 		// Unpack 8x 5-bit source blocks into a 5 byte
 		// destination quantum
 		switch len(src) {
-                default:
-                        dst[7] |= src[4] & 0x1F
-                        dst[6] |= src[4] >> 5
-                        fallthrough
-                case 4:
-                        dst[6] |= (src[3] << 3) & 0x1F
-                        dst[5] |= (src[3] >> 2) & 0x1F
-                        dst[4] |= src[3] >> 7
-                        fallthrough
-                case 3:
-                        dst[4] |= (src[2] << 1) & 0x1F
-                        dst[3] |= (src[2] >> 4) & 0x1F
+		default:
+			dst[7] |= src[4] & 0x1F
+			dst[6] |= src[4] >> 5
 			fallthrough
-                case 2:
-			dst[3] |= (src[1] << 5) & 0x1F
+		case 4:
+			dst[6] |= (src[3] << 3) & 0x1F
+			dst[5] |= (src[3] >> 2) & 0x1F
+			dst[4] |= src[3] >> 7
+			fallthrough
+		case 3:
+			dst[4] |= (src[2] << 1) & 0x1F
+			dst[3] |= (src[2] >> 4) & 0x1F
+			fallthrough
+		case 2:
+			dst[3] |= (src[1] << 4) & 0x1F
 			dst[2] |= (src[1] >> 1) & 0x1F
-                        dst[1] |= (src[1] >> 6) & 0x1F
+			dst[1] |= (src[1] >> 6) & 0x1F
 			fallthrough
 		case 1:
 			dst[1] |= (src[0] << 2) & 0x1F
@@ -107,27 +107,22 @@ func (enc *Encoding) Encode(dst, src []byte) {
 		}
 
 		// Pad the final quantum
-		if len(src) < 7 {
+		if len(src) < 5 {
 			dst[7] = '='
-			if len(src) < 6 {
+			if len(src) < 4 {
 				dst[6] = '='
-				if len(src) < 5 {
-					dst[5] = '='
-					if len(src) < 4 {
-						dst[4] = '='
-						if len(src) < 3 {
-							dst[3] = '='
-							if len(src) < 2 {
-								dst[2] = '='
-							}
-						}
+				dst[5] = '='
+				if len(src) < 3 {
+					dst[4] = '='
+					if len(src) < 2 {
+						dst[3] = '='
+						dst[2] = '='
 					}
 				}
 			}
 			break
 		}
-
-		src = src[7:]  // does this work?
+		src = src[5:]
 		dst = dst[8:]
 	}
 }
@@ -198,7 +193,7 @@ func (e *encoder) Close() os.Error {
 	if e.err == nil && e.nbuf > 0 {
 		e.enc.Encode(e.out[0:], e.buf[0:e.nbuf])
 		e.nbuf = 0
-		_, e.err = e.w.Write(e.out[0:4])        // 5 bytes blocks, not  4
+		_, e.err = e.w.Write(e.out[0:4]) // 5 bytes blocks, not  4
 	}
 	return e.err
 }
@@ -228,22 +223,23 @@ func (e CorruptInputError) String() string {
 
 // decode is like Decode but returns an additional 'end' value, which
 // indicates if end-of-message padding was encountered and thus any
-// additional data is an error.  decode also assumes len(src)%4==0,
+// additional data is an error.  decode also assumes len(src)%8==0,
 // since it is meant for internal use.
 func (enc *Encoding) decode(dst, src []byte) (n int, end bool, err os.Error) {
-	for i := 0; i < len(src)/4 && !end; i++ {
-		// Decode quantum using the base64 alphabet
-		var dbuf [4]byte
-		dlen := 4
+	for i := 0; i < len(src)/8 && !end; i++ {
+		// Decode quantum using the base32 alphabet
+		var dbuf [8]byte
+		dlen := 8
 
 	dbufloop:
-		for j := 0; j < 4; j++ {
-			in := src[i*4+j]
-			if in == '=' && j >= 2 && i == len(src)/4-1 {
+		for j := 0; j < 8; j++ {
+			in := src[i*8+j]
+			if in == '=' && j >= 2 && i == len(src)/8-1 {
 				// We've reached the end and there's
 				// padding
-				if src[i*4+3] != '=' {
-					return n, false, CorruptInputError(i*4 + 2)
+				if src[i*8+2] != '=' && src[i*8+4] != '=' &&
+					src[i*8+5] != '=' && src[i*8+7] != '=' {
+					return n, false, CorruptInputError(i*8 + j)
 				}
 				dlen = j
 				end = true
@@ -251,21 +247,31 @@ func (enc *Encoding) decode(dst, src []byte) (n int, end bool, err os.Error) {
 			}
 			dbuf[j] = enc.decodeMap[in]
 			if dbuf[j] == 0xFF {
-				return n, false, CorruptInputError(i*4 + j)
+				return n, false, CorruptInputError(i*8 + j)
 			}
 		}
 
-		// Pack 4x 6-bit source blocks into 3 byte destination
+		// Pack 8x 5-bit source blocks into 5 byte destination
 		// quantum
 		switch dlen {
+		case 8:
+			fallthrough
+		case 7:
+			fallthrough
+		case 6:
+			dst[i*8+4] = dbuf[6]<<5 | dbuf[7]
+			fallthrough
+		case 5:
+			dst[i*8+3] = dbuf[4]<<7 | dbuf[5]<<2 | dbuf[6]>>3
+			fallthrough
 		case 4:
-			dst[i*3+2] = dbuf[2]<<6 | dbuf[3]
+			dst[i*8+2] = dbuf[3]<<4 | dbuf[4]>>1
 			fallthrough
 		case 3:
-			dst[i*3+1] = dbuf[1]<<4 | dbuf[2]>>2
+			dst[i*8+1] = dbuf[1]<<6 | dbuf[2]<<1 | dbuf[3]>>4
 			fallthrough
 		case 2:
-			dst[i*3+0] = dbuf[0]<<2 | dbuf[1]>>4
+			dst[i*8+0] = dbuf[0]<<3 | dbuf[1]>>2
 		}
 		n += dlen - 1
 	}
@@ -278,8 +284,8 @@ func (enc *Encoding) decode(dst, src []byte) (n int, end bool, err os.Error) {
 // written.  If src contains invalid base32 data, it will return the
 // number of bytes successfully written and CorruptInputError.
 func (enc *Encoding) Decode(dst, src []byte) (n int, err os.Error) {
-	if len(src)%4 != 0 {
-		return 0, CorruptInputError(len(src) / 4 * 4)
+	if len(src)%8 != 0 {
+		return 0, CorruptInputError(len(src) / 8 * 8)
 	}
 
 	n, _, err = enc.decode(dst, src)
