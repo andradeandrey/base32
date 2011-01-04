@@ -254,11 +254,7 @@ func (enc *Encoding) decode(dst, src []byte) (n int, end bool, err os.Error) {
 		// Pack 8x 5-bit source blocks into 5 byte destination
 		// quantum
 		switch dlen {
-		case 8:
-			fallthrough
-		case 7:
-			fallthrough
-		case 6:
+		case 6, 7, 8:
 			dst[i*8+4] = dbuf[6]<<5 | dbuf[7]
 			fallthrough
 		case 5:
