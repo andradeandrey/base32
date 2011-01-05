@@ -30,6 +30,7 @@ var pairs = []testpair{
 	{"fooba", "MZXW6YTB"},
 	{"foobar", "MZXW6YTBOI======"},
 
+
 	// Wikipedia examples, converted to base32
 	{"sure.", "ON2XEZJO"},
 	{"sure", "ON2XEZI="},
@@ -106,7 +107,6 @@ func TestDecode(t *testing.T) {
                 p.decoded)
 	}
 }
-
 /*
 func TestDecoder(t *testing.T) {
 	for _, p := range pairs {
@@ -138,6 +138,7 @@ func TestDecoderBuffering(t *testing.T) {
 		testEqual(t, "Decoding/%d of %q = %q, want %q", bs, bigtest.encoded, string(buf[0:total]), bigtest.decoded)
 	}
 }
+*/
 
 func TestDecodeCorrupt(t *testing.T) {
 	type corrupt struct {
@@ -146,11 +147,11 @@ func TestDecodeCorrupt(t *testing.T) {
 	}
 	examples := []corrupt{
 		{"!!!!", 0},
-		{"x===", 1},
-		{"AA=A", 2},
+		{"x===", 0},
+		{"AA=A====", 2},
 		{"AAA=AAAA", 3},
-		{"AAAAA", 4},
-		{"AAAAAA", 4},
+		{"MMMMMMMMM", 8},
+		{"MMMMMM", 0},
 	}
 
 	for _, e := range examples {
@@ -165,6 +166,7 @@ func TestDecodeCorrupt(t *testing.T) {
 	}
 }
 
+/*
 func TestBig(t *testing.T) {
 	n := 3*1000 + 1
 	raw := make([]byte, n)

@@ -237,10 +237,11 @@ func (enc *Encoding) decode(dst, src []byte) (n int, end bool, err os.Error) {
 			in := src[i*8+j]
 			if in == '=' && j >= 2 && i == len(src)/8-1 {
 				// We've reached the end and there's
-				// padding
-				if src[i*8+2] != '=' && src[i*8+4] != '=' &&
-					src[i*8+5] != '=' && src[i*8+7] != '=' {
+				// padding, the rest should be padded
+                                for k:=j; k<8; k++ {
+                                        if src[i*8+k] != '=' {
 					return n, false, CorruptInputError(i*8 + j)
+                                        }
 				}
 				dlen = j
 				end = true
