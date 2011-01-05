@@ -6,7 +6,7 @@ package base32
 
 import (
 	"bytes"
-//	"io/ioutil"
+	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -125,7 +125,6 @@ func TestDecoder(t *testing.T) {
 	}
 }
 
-/*
 func TestDecoderBuffering(t *testing.T) {
 	for bs := 1; bs <= 12; bs++ {
 		decoder := NewDecoder(StdEncoding, bytes.NewBufferString(bigtest.encoded))
@@ -139,7 +138,6 @@ func TestDecoderBuffering(t *testing.T) {
 		testEqual(t, "Decoding/%d of %q = %q, want %q", bs, bigtest.encoded, string(buf[0:total]), bigtest.decoded)
 	}
 }
-*/
 
 func TestDecodeCorrupt(t *testing.T) {
 	type corrupt struct {
@@ -167,7 +165,6 @@ func TestDecodeCorrupt(t *testing.T) {
 	}
 }
 
-/*
 func TestBig(t *testing.T) {
 	n := 3*1000 + 1
 	raw := make([]byte, n)
@@ -200,4 +197,3 @@ func TestBig(t *testing.T) {
 		t.Errorf("Decode(Encode(%d-byte string)) failed at offset %d", n, i)
 	}
 }
-*/
