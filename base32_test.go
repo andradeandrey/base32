@@ -6,7 +6,7 @@ package base32
 
 import (
 	"bytes"
-	"io/ioutil"
+//	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -17,9 +17,9 @@ type testpair struct {
 
 var pairs = []testpair{
 	// RFC 3548 examples
-	{"\x14\xfb\x9c\x03\xd9\x7e", "FPucA9l+"},
-	{"\x14\xfb\x9c\x03\xd9", "FPucA9k="},
-	{"\x14\xfb\x9c\x03", "FPucAw=="},
+//	{"\x14\xfb\x9c\x03\xd9\x7e", "FPucA9l+"}, no base32 examples in RFC 3548
+//	{"\x14\xfb\x9c\x03\xd9", "FPucA9k="},
+//	{"\x14\xfb\x9c\x03", "FPucAw=="},
 
 	// RFC 4648 examples
 	{"", ""},
@@ -30,20 +30,20 @@ var pairs = []testpair{
 	{"fooba", "MZXW6YTB"},
 	{"foobar", "MZXW6YTBOI======"},
 
-	// Wikipedia examples
-	{"sure.", "c3VyZS4="},
-	{"sure", "c3VyZQ=="},
-	{"sur", "c3Vy"},
-	{"su", "c3U="},
-	{"leasure.", "bGVhc3VyZS4="},
-	{"easure.", "ZWFzdXJlLg=="},
-	{"asure.", "YXN1cmUu"},
-	{"sure.", "c3VyZS4="},
+	// Wikipedia examples, converted to base32
+	{"sure.", "ON2XEZJO"},
+	{"sure", "ON2XEZI="},
+	{"sur", "ON2XE==="},
+	{"su", "ON2Q===="},
+	{"leasure.", "NRSWC43VOJSS4==="},
+	{"easure.", "MVQXG5LSMUXA===="},
+	{"asure.", "MFZXK4TFFY======"},
+	{"sure.", "ON2XEZJO"},
 }
 
 var bigtest = testpair{
 	"Twas brillig, and the slithy toves",
-	"VHdhcyBicmlsbGlnLCBhbmQgdGhlIHNsaXRoeSB0b3Zlcw==",
+	"KR3WC4ZAMJZGS3DMNFTSYIDBNZSCA5DIMUQHG3DJORUHSIDUN53GK4Y=",
 }
 
 func testEqual(t *testing.T, msg string, args ...interface{}) bool {
@@ -101,10 +101,13 @@ func TestDecode(t *testing.T) {
 		if len(p.encoded) > 0 {
 			testEqual(t, "Decode(%q) = end %v, want %v", p.encoded, end, (p.encoded[len(p.encoded)-1] == '='))
 		}
-		testEqual(t, "Decode(%q) = %q, want %q", p.encoded, string(dbuf[0:count]), p.decoded)
+		testEqual(t, "Decode(%q) = %q, want %q", p.encoded,
+                string(dbuf[0:count]),
+                p.decoded)
 	}
 }
 
+/*
 func TestDecoder(t *testing.T) {
 	for _, p := range pairs {
 		decoder := NewDecoder(StdEncoding, bytes.NewBufferString(p.encoded))
@@ -194,3 +197,4 @@ func TestBig(t *testing.T) {
 		t.Errorf("Decode(Encode(%d-byte string)) failed at offset %d", n, i)
 	}
 }
+*/
