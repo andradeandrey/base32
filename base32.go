@@ -326,21 +326,21 @@ func (d *decoder) Read(p []byte) (n int, err os.Error) {
 	}
 
 	// Read a chunk.
-	nn := len(p) / 8 * 5
-	if nn < 5 {
-		nn = 5
+	nn := len(p) / 5 * 8
+	if nn < 8 {
+		nn = 8
 	}
 	if nn > len(d.buf) {
 		nn = len(d.buf)
 	}
-	nn, d.err = io.ReadAtLeast(d.r, d.buf[d.nbuf:nn], 5-d.nbuf)
+	nn, d.err = io.ReadAtLeast(d.r, d.buf[d.nbuf:nn], 8-d.nbuf)
 	d.nbuf += nn
-	if d.nbuf < 5 {
+	if d.nbuf < 8 {
 		return 0, d.err
 	}
 
 	// Decode chunk into p, or d.out and then p if p is too small.
-	nr := d.nbuf / 8 * 6
+	nr := d.nbuf / 8 * 8
 	nw := d.nbuf / 8 * 5
 	if nw > len(p) {
 		nw, d.end, d.err = d.enc.decode(d.outbuf[0:], d.buf[0:nr])

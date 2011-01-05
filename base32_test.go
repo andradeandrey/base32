@@ -107,7 +107,7 @@ func TestDecode(t *testing.T) {
                 p.decoded)
 	}
 }
-/*
+
 func TestDecoder(t *testing.T) {
 	for _, p := range pairs {
 		decoder := NewDecoder(StdEncoding, bytes.NewBufferString(p.encoded))
@@ -125,6 +125,7 @@ func TestDecoder(t *testing.T) {
 	}
 }
 
+/*
 func TestDecoderBuffering(t *testing.T) {
 	for bs := 1; bs <= 12; bs++ {
 		decoder := NewDecoder(StdEncoding, bytes.NewBufferString(bigtest.encoded))
